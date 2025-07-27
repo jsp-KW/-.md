@@ -32,6 +32,7 @@ Spring Boot 기반 OpenBanking 프로젝트에서, 인증 코드와 예약 이�
 docker pull redis
 docker run -d -p 6379:6379 --name redis redis
 ```
+<img width="975" height="392" alt="image" src="https://github.com/user-attachments/assets/39b80e07-9c38-4935-aa8d-3f1159b8e2fa" />
 
 ---
 
