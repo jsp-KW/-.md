@@ -167,5 +167,49 @@ No qualifying bean of type 'RedisTemplate<String, Object>' available
 ### ✅ 해결
 - `RedisConfig.java`에서 **직접 Bean 등록** 필요 (위 코드 참고)
 
+### 🔎 문제 상황
+
+Spring Boot에서 `RedisTemplate<String, String>`을 직접 등록하고 주입하려 했더니 다음과 같은 에러 발생:
+
+```
+No qualifying bean of type 'RedisTemplate<String, String>' available: expected single matching bean but found 2
+```
+
+### 📌 원인 분석
+
+- Spring Boot는 내부적으로 기본 `StringRedisTemplate`을 자동 등록함  
+- 여기에 내가 수동으로 `RedisTemplate<String, String>`을 등록하면서 **같은 타입의 Bean이 2개** 생성됨  
+- Spring은 어떤 Bean을 주입해야 할지 몰라 `NoUniqueBeanDefinitionException` 발생
+
+### ✅ 해결 방법
+
+#### ✔️ 방법 1: `@Primary` 사용
+```java
+@Configuration
+public class RedisConfig {
+
+    @Bean
+    @Primary  // 우선 순위 명시
+    public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new StringRedisSerializer());
+        return template;
+    }
+}
+```
+
+#### ✔️ 방법 2: `@Qualifier`로 명시
+```java
+@Bean
+@Qualifier("stringRedisTemplate")
+public RedisTemplate<String, String> stringRedisTemplate(...) {
+    ...
+}
+
+@Qualifier("stringRedisTemplate")
+private final RedisTemplate<String, String> redisTemplate;
+```
 ---
 
