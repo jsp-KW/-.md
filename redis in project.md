@@ -151,8 +151,6 @@ http
 "Hi redis~!"
 ```
 
-✅ **200 OK**, 응답 속도 약 **60~80ms**
-
 ---
 
 ##  RedisTemplate 주입 오류 발생
