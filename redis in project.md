@@ -1,7 +1,7 @@
 
-# 🚀 Redis 연동 도입기 (Spring Boot + RedisTemplate)
+# Redis 연동 도입기 (Spring Boot + RedisTemplate)
 
-## ✅ 도입 배경
+## 도입 배경
 
 Spring Boot 기반 OpenBanking 프로젝트에서, 인증 코드와 예약 이체 대기열, 알림 등 실시간 처리가 필요한 기능이 증가하며 기존 RDBMS만으로는 한계 발생:
 
@@ -13,7 +13,7 @@ Spring Boot 기반 OpenBanking 프로젝트에서, 인증 코드와 예약 이�
 
 ---
 
-## 🧭 Redis 연동 절차 요약
+##  Redis 연동 절차 요약
 
 1. Docker로 Redis 컨테이너 실행
 2. `build.gradle`에 Redis 의존성 추가
@@ -26,7 +26,7 @@ Spring Boot 기반 OpenBanking 프로젝트에서, 인증 코드와 예약 이�
 
 ---
 
-## 🐳 Docker Desktop으로 Redis 실행
+##  Docker Desktop으로 Redis 실행
 
 ```bash
 docker pull redis
@@ -36,7 +36,7 @@ docker run -d -p 6379:6379 --name redis redis
 
 ---
 
-## 📦 build.gradle 의존성 추가
+##  build.gradle 의존성 추가
 
 ```groovy
 dependencies {
@@ -47,7 +47,7 @@ dependencies {
 
 ---
 
-## ⚙️ application.yml 설정
+##  application.yml 설정
 
 ```yaml
 spring:
@@ -57,11 +57,11 @@ spring:
       port: 6379
 ```
 
-> ℹ️ `spring.redis`는 deprecated, `spring.data.redis` 사용 권장
+>  `spring.redis`는 deprecated, `spring.data.redis` 사용 권장
 
 ---
 
-## 🔧 RedisTemplate 수동 Bean 등록
+##  RedisTemplate 수동 Bean 등록
 
 ```java
 @Configuration
@@ -80,9 +80,9 @@ public class RedisConfig {
 
 ---
 
-## 🧪 테스트용 Service & Controller
+## 테스트용 Service & Controller
 
-### 📄 RedisTestService.java
+###  RedisTestService.java
 
 ```java
 @Service
@@ -100,7 +100,7 @@ public class RedisTestService {
 }
 ```
 
-### 📄 RedisTestController.java
+###  RedisTestController.java
 
 ```java
 @RestController
@@ -125,7 +125,7 @@ public class RedisTestController {
 
 ---
 
-## 🔐 Spring Security 설정
+##  Spring Security 설정
 
 ```java
 http
@@ -138,7 +138,7 @@ http
 
 ---
 
-## 📮 Postman 테스트 결과
+##  Postman 테스트 결과
 
 | Method | Endpoint                     | 설명           |
 |--------|-------------------------------|----------------|
@@ -155,19 +155,19 @@ http
 
 ---
 
-## ❗ RedisTemplate 주입 오류 발생
+##  RedisTemplate 주입 오류 발생
 
 ```text
 No qualifying bean of type 'RedisTemplate<String, Object>' available
 ```
 
-### 🔍 원인
+###  원인
 - Spring Boot는 기본적으로 `RedisTemplate<String, Object>`를 자동 등록하지 않음
 
-### ✅ 해결
+###  해결
 - `RedisConfig.java`에서 **직접 Bean 등록** 필요 (위 코드 참고)
 
-### 🔎 문제 상황
+###  문제 상황
 
 Spring Boot에서 `RedisTemplate<String, String>`을 직접 등록하고 주입하려 했더니 다음과 같은 에러 발생:
 
@@ -175,15 +175,15 @@ Spring Boot에서 `RedisTemplate<String, String>`을 직접 등록하고 주입�
 No qualifying bean of type 'RedisTemplate<String, String>' available: expected single matching bean but found 2
 ```
 
-### 📌 원인 분석
+###  원인 분석
 
 - Spring Boot는 내부적으로 기본 `StringRedisTemplate`을 자동 등록함  
 - 여기에 내가 수동으로 `RedisTemplate<String, String>`을 등록하면서 **같은 타입의 Bean이 2개** 생성됨  
 - Spring은 어떤 Bean을 주입해야 할지 몰라 `NoUniqueBeanDefinitionException` 발생
 
-### ✅ 해결 방법
+###  해결 방법
 
-#### ✔️ 방법 1: `@Primary` 사용
+####  방법 1: `@Primary` 사용
 ```java
 @Configuration
 public class RedisConfig {
@@ -200,7 +200,7 @@ public class RedisConfig {
 }
 ```
 
-#### ✔️ 방법 2: `@Qualifier`로 명시
+####  방법 2: `@Qualifier`로 명시
 ```java
 @Bean
 @Qualifier("stringRedisTemplate")
@@ -212,4 +212,16 @@ public RedisTemplate<String, String> stringRedisTemplate(...) {
 private final RedisTemplate<String, String> redisTemplate;
 ```
 ---
+
+
+### 깨달은 점
+- 기존의 backend 서버 구축시 단일 RDBMS 만으로는 실시간성, TTL 기반 데이터처리, 고속 데이터 접근 등의 실무에서(?) 자주 발생하여 고려해야하는 문제점들을 보완하긴 어렵다는 점을 깨달았습니다.
+  
+- 또한 여러 증권,은행 앱을 사용하다보면 일정 시간이 지난 이후 재로그인을 하라는 요청을 경험한 기억을 떠올렸고 이런 기능을 프로젝트에 적용하기 위해서 도입해야할 것을 공부하던중 로그인 세션 만료 알림, 인증코드 만료등 일시성 데이터처리에 Redis가 많이 활용된다는 점을 발견하였습니다.
+  
+- 이를 계기로 Redis에 대해 직접 학습하고 도입해보며 RedisTemplate을 직접 Bean으로 등록해 발생한 충돌 이슈와 해결법에 대해서 알게 되었습니다.
+  
+- Spring 은 IOC (제어의 역전) 을 통해 객체의 생성과 객체의 생명주기를 직접 관리합니다. 하지만 동일한 타입의 Bean이 여러개 존재할 경우, 어떤 Bean 을 주입해야 할지 결정할 수 없어 NoUniqueBeanDefinitionException 에러가 발생합니다.
+  
+- 이 에러 발생을 통해 Spring에서는 @Primary, @Qualifier 를 활용하여 의존성 주입의 대상인 Bean을 명확히 지정해야함을 깨달았습니다.
 
