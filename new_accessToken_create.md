@@ -1,8 +1,8 @@
 
-# 🛠️ JWT Refresh Token 재발급 시 `ROLE_null` 문제 해결 기록
+# JWT Refresh Token 재발급 시 `ROLE_null` 문제 해결 기록
 
 
-## 📌 문제 요약
+##  문제 요약
 
 Spring Boot 기반의 JWT 인증 시스템에서,  
 AccessToken 만료 시 RefreshToken을 통해 새로운 AccessToken을 발급받는 과정에서 다음과 같은 문제가 발생:
@@ -48,7 +48,7 @@ AccessToken 만료 시 RefreshToken을 통해 새로운 AccessToken을 발급받
 
 ## 해결 방법
 
-### 🔧 1. RefreshToken에도 `role` 포함
+### 1. RefreshToken에도 `role` 포함
 
 `JwtTokenProvider.java` 수정:
 ```java
@@ -79,17 +79,15 @@ String refreshToken = jwtUtil.createRefreshToken(request.getEmail(), role);
 
 ---
 
-## 📝 교훈
+## 깨달은 점
 
 
 - 토큰을 만드는 쪽과 파싱하는 쪽의 key-value 구조 일관성을 반드시 확인할 것
+- 보안관련 공부를 통해 보안성을 조금 보완하기 위해 성급하게 공부를 하다 필드하나를 제대로 신경을 쓰지 못하였습니다.
+- 디버깅과 테스트 코드 작성으로 더욱 꼼꼼히 신경써 구조적인 안정성을 책임질 수 있는 능력을 길러야함을 깨달았습니다.
 
 ---
 
-## 📂 관련 파일
-
-- `JwtTokenProvider.java`
-- `AuthController.java`
 
 ---
 
